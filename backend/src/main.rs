@@ -1,6 +1,34 @@
-use axum::{Router};
-use std::{net::SocketAddr};
 use tower_http::services::{ServeDir, ServeFile};
+use axum::{
+    extract::{Form, Query},
+    Router,
+    routing::{post, get},
+    response::{Html, IntoResponse},
+};
+use serde::Deserialize;
+
+
+
+#[derive(Deserialize)]
+struct ForgotForm {
+    email: String,
+}
+
+#[derive(Deserialize)]
+struct ResetForm {
+    token: String,
+    password: String,
+}
+
+async fn forgot_password(Form(form): Form<ForgotForm>) -> impl IntoResponse {
+    println!("Envoyer email à {}", form.email);
+    Html("Lien envoyé si l’email existe")
+}
+
+async fn reset_password(Form(form): Form<ResetForm>) -> impl IntoResponse {
+    println!("Reset avec token {}, nouveau mdp {}", form.token, form.password);
+    Html("Mot de passe réinitialisé")
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
@@ -9,6 +37,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
 
     // Router sans `nest_service`, mais avec fallback
     let app = Router::new()
+    .route("/api/forgot-password", post(forgot_password))
+    .route("/api/reset-password", post(reset_password))
     .route("/index", axum::routing::get(|| async { "Hello from index!" }))
     .fallback_service(
             static_files

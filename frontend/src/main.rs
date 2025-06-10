@@ -1,36 +1,33 @@
 use yew::prelude::*;
-use web_sys::UrlSearchParams;
+use yew_router::prelude::*;
 
-#[function_component(ResetPassword)]
-fn reset_password() -> Html {
-    let token = use_state(|| None::<String>);
+mod routes;
+mod pages {
+    pub mod forgot_password;
+    pub mod reset_password;
+}
 
-    use_effect_with((), {
-        let token = token.clone();
-        move |_| {
-            let location = web_sys::window().unwrap().location();
-            let search = location.search().unwrap_or_default(); // ?token=abc123
-            let params = UrlSearchParams::new_with_str(&search).unwrap();
-            let token_value = params.get("token");
-            token.set(token_value);
-            || ()
-        }
-    });
+use routes::Route;
+use pages::forgot_password::ForgotPassword;
+use pages::reset_password::ResetPassword;
 
+#[function_component(App)]
+fn app() -> Html {
     html! {
-        <>
-            <h1>{ "Réinitialisation du mot de passe du côte serveur" }</h1>
-            {
-                if let Some(t) = &*token {
-                    html! { <p>{ format!("Token reçu : {}", t) }</p> }
-                } else {
-                    html! { <p>{ "Aucun token trouvé dans l'URL." }</p> }
-                }
-            }
-        </>
+        <BrowserRouter>
+            <Switch<Route> render={switch} />
+        </BrowserRouter>
+    }
+}
+
+fn switch(route: Route) -> Html {
+    match route {
+        Route::ForgotPassword => html! { <ForgotPassword /> },
+        Route::ResetPassword => html! { <ResetPassword /> },
+        Route::NotFound => html! { <p>{ "Page non trouvée" }</p> },
     }
 }
 
 fn main() {
-    yew::Renderer::<ResetPassword>::new().render();
+    yew::Renderer::<App>::new().render();
 }
